@@ -1,0 +1,1 @@
+Fallback visuals are locally generated project placeholders. Product cards use external PNG image URLs configured in app.py. External image availability/licensing should be checked before public/commercial deployment.

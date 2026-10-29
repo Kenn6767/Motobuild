@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Find compatible parts{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy"><span class="eyebrow">RIDE SMART. BUILD RIGHT.</span><h1>The right parts for<br><em>your motorcycle.</em></h1>
+  <p>Find demo-compatible parts, place an order, and follow its approval status in one place.</p>
+  <a class="button button-light" href="#catalog">Explore parts <span>↓</span></a></div>
+  <div class="hero-art"><div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="hero-tag">FITMENT<br><b>FIRST</b></div><div class="hero-number">MB<span> / 01</span></div></div>
+</section>
+<section class="fitment-panel">
+  <div><span class="eyebrow dark">START WITH YOUR BIKE</span><h2>Find your fit</h2><p>Choose a sample motorcycle to filter the catalog.</p></div>
+  <form method="get" class="fitment-form"><select name="bike" aria-label="Select motorcycle"><option value="">All demo motorcycles</option>{% for bike in bikes %}<option value="{{ bike.id }}" {% if selected_bike == bike.id %}selected{% endif %}>{{ bike.brand }} {{ bike.model }} · {{ bike.year_start }}–{{ bike.year_end }}</option>{% endfor %}</select><button class="button button-dark">Check compatibility</button></form>
+</section>
+<section id="catalog" class="catalog-head"><div><span class="eyebrow dark">THE PARTS SHELF</span><h2>Popular parts <span class="count">{{ parts|length }} items</span></h2></div><span class="demo-label">DEMO CATALOG</span></section>
+<div class="product-grid">
+{% for part in parts %}
+  <article class="product-card">
+    <div class="product-image"><span class="part-category">{{ part.category }}</span><img src="{{ part.image_url }}" alt="{{ part.name }}" loading="lazy" onerror="this.style.display='none';this.parentElement.classList.add('image-fallback')"><span class="fallback-mark">MB</span></div>
+    <div class="product-info"><div class="sku">{{ part.sku }}</div><h3>{{ part.name }}</h3><p>{{ part.description }}</p>
+      <div class="compatible"><span>FITS DEMO MODELS</span>{% for fit in part.compatibility %}<small>{{ fit.motorcycle.brand }} {{ fit.motorcycle.model }}</small>{% endfor %}</div>
+      <div class="product-bottom"><div><strong>₱{{ '%.2f'|format(part.price|float) }}</strong><small>{{ part.stock }} in stock</small></div>
+      {% if current_user and current_user.role == 'customer' %}
+      <button class="button button-dark buy-trigger" data-modal="order-{{ part.id }}">Order part</button>
+      {% elif not current_user %}<a class="button button-dark" href="{{ url_for('login') }}">Sign in to order</a>
+      {% else %}<span class="admin-pill">Admin view</span>{% endif %}</div>
+    </div>
+  </article>
+  {% if current_user and current_user.role == 'customer' %}
+  <dialog id="order-{{ part.id }}" class="order-modal"><form method="post" action="{{ url_for('place_order', part_id=part.id) }}"><button type="button" class="modal-close" data-close aria-label="Close">×</button><span class="eyebrow dark">CHECKOUT</span><h2>Order {{ part.name }}</h2><p>Orders stay pending until an admin reviews them.</p><label>Quantity<input type="number" name="quantity" min="1" max="{{ [part.stock, 20]|min }}" value="1" required></label><label>Shipping address<textarea name="address" rows="3" placeholder="House number, street, barangay, city" required></textarea></label><div class="modal-total">Unit price <b>₱{{ '%.2f'|format(part.price|float) }}</b></div><button class="button button-dark full" {% if part.stock < 1 %}disabled{% endif %}>Submit for approval</button></form></dialog>
+  {% endif %}
+{% else %}<div class="empty-state">No compatible demo parts found. Try selecting another motorcycle.</div>{% endfor %}
+</div>
+<section class="steps"><div><span>01</span><b>Select your bike</b><p>Filter parts by demo fitment.</p></div><div><span>02</span><b>Place your order</b><p>Stock is checked during checkout.</p></div><div><span>03</span><b>Wait for approval</b><p>An admin reviews each request.</p></div></section>
+{% endblock %}
